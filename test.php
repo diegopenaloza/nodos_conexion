@@ -9,20 +9,27 @@
 
 </head>
 <style>
+#mynetwork {
+    
 
-#mynetwork{
-    height: 900px;
-    weight: 900px;
-}
+    width:100vw;
+    height:90vh; 
+    border: 1px solid rgb(0, 0, 0);
+
+  }
 
 </style>
 <body>
 
 
 
-<div id="wrapper">
-
+<input
+    type="button"
+    onclick="setTheData()"
+    value="setData. This stabilizes again if stabilization is true."
+  />
 <div id="mynetwork" >
+
   <lottie-player id="lottie" src="https://assets8.lottiefiles.com/packages/lf20_c2h6pryr.json" background="transparent" speed="1" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);  width: 350px; height: 350px;" loop autoplay></lottie-player>
 </div>
 
@@ -30,7 +37,7 @@
 
 
   <script>
-
+  var clusterOptionsByData;
 
 var EDGE_LENGTH_SUB = 50;
     var titleElement = document.createElement("div");
@@ -40,11 +47,11 @@ titleElement.style.width = "10em";
     var container = document.getElementById('mynetwork');
 
     var nodes=[];
+    var edges=[]
     
-
     var data = {
       nodes: nodes,
-      edges: []
+      edges: edges
     };
 
 
@@ -62,7 +69,8 @@ $fixed= True,
 $shape= 'square',
 $image='https://cdn-icons-png.flaticon.com/512/3106/3106773.png',
 $xp= 0,
-$yp= 0
+$yp= 0,
+$cid= '1',
 
 
 ) {
@@ -91,7 +99,8 @@ $yp= 0
       
         fixed:  false ,
         x: $xp,
-        y: $yp
+        y: $yp,
+        cid: '$cid',
        
       
       });\n";
@@ -127,7 +136,8 @@ $yp= 0
             $shape= 'diamond',
             $image= 'https://cdn-icons-png.flaticon.com/512/554/554724.png',
             $xp= 10,
-            $yp= 10
+            $yp= 10,
+            $cid= '2',
             
           );
         }
@@ -162,7 +172,8 @@ $yp= 0
         $shape= 'diamond',
         $image= 'https://cdn-icons-png.flaticon.com/512/1733/1733598.png',
         $xp= 10,
-        $yp= 10
+        $yp= 10,
+        $cid= '3',
        
       );
         }
@@ -172,7 +183,7 @@ $yp= 0
 }
 
 
-$a = '0990320810001';
+$a = '1790008967001';
 
 // 105715924
 
@@ -202,6 +213,7 @@ var ruc = "<?php echo $a ?>";
 // };
 
 var options = {
+  cluster: true,
   interaction: {
     tooltipDelay: 0.2,
     hover: true,
@@ -243,7 +255,14 @@ var options = {
     },
   },
   // Deshabilitar la física de todos los nodos
-  physics: true,
+  physics: {
+      stabilization: true,
+      barnesHut: {
+        gravitationalConstant: -1000,
+        springConstant: 0.001,
+        springLength: 10,
+      },
+    },
 
 };
 
@@ -357,16 +376,84 @@ network.on("dragEnd", function (params) {
         document.querySelector('.info-node-div').remove();
         }
 });
+
+
+
+
+network.once("beforeDrawing", function () {
+    network.focus(ruc, {
+      scale: 12,
+    });
+  });
+  network.once("afterDrawing", function () {
+    network.fit({
+      animation: {
+        duration: 3000,
+        easingFunction: "linear",
+      },
+    });
+  });
+
   // Oculta el elemento "lottie" cuando se carga la red de nodos
   network.once('afterDrawing', function() {
     const lottie = document.getElementById('lottie');
     lottie.style.display = 'none';
   });
 
+  network.on("selectNode", function (params) {
+    if (params.nodes.length == 1) {
+      if (network.isCluster(params.nodes[0]) == true) {
+        network.openCluster(params.nodes[0]);
+      }
+    }
+  });
 
+  function create_clus() {
+  var cids = [2,3 ];
+  
+  for (var i = 0; i < cids.length; i++) {
 
+    if (i == 0) {
+  var imagen_sel = "https://cdn-icons-png.flaticon.com/512/9446/9446198.png";
+} else {
+  var imagen_sel = "https://cdn-icons-png.flaticon.com/512/9638/9638966.png";
+}
+    var cid = cids[i];
+    var clusterOptionsByData = {
+      joinCondition: function (childOptions, childNodes) {
+        return childOptions.cid == cid;
+      },
+      processProperties: function (clusterOptions, childNodes, childOptions) {
+        clusterOptions.label = "" + childNodes.length+ "";
+        return clusterOptions;
+      },
+      clusterNodeProperties: {
+        id: "cidCluster_" + cid,
+        shape: "circularImage",
+        image: imagen_sel,
+        color: { background: "#dadf4d" },
+        // physics: false, 
+        borderWidth: 3,
+        value: 0,
+        scaling: {
+          animation: {
+            duration: 5000000
+          }
+        }
+      },
+    };
+    network.cluster(clusterOptionsByData);
+  }
+}
+create_clus() 
 
+function setTheData() {
+    // nodes = nodes;
+    // edges = new vis.DataSet(edgesArray);
+    network.setData({ nodes: nodes, edges: edges });
 
+    create_clus() 
+  }
 
   </script>
 </body>
